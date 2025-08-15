@@ -630,18 +630,25 @@
                 return;
             }
             
-            // Collect form data
-            const formData = {
-                studentName: document.getElementById('studentName').value,
-                grade: document.getElementById('grade').value,
-                parentName: document.getElementById('parentName').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                timestamp: new Date().toISOString()
-            };
+            // Validate required fields
+            const studentName = document.getElementById('studentName').value.trim();
+            const grade = document.getElementById('grade').value;
+            const parentName = document.getElementById('parentName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            
+            if (!studentName || !grade || !parentName || !email || !phone) {
+                alert('Please fill in all required fields.');
+                return;
+            }
             
             // Collect club rankings
             const clubItems = document.querySelectorAll('.club-item');
+            if (clubItems.length === 0) {
+                alert('Please select a grade to see available clubs, then rank your preferences.');
+                return;
+            }
+            
             const rankings = [];
             clubItems.forEach((item, index) => {
                 rankings.push({
@@ -649,7 +656,17 @@
                     rank: index + 1
                 });
             });
-            formData.rankings = rankings;
+            
+            // Collect form data
+            const formData = {
+                studentName: studentName,
+                grade: grade,
+                parentName: parentName,
+                email: email,
+                phone: phone,
+                rankings: rankings,
+                timestamp: new Date().toISOString()
+            };
             
             // Show loading state
             const submitBtn = document.querySelector('.submit-btn');
