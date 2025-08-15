@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Club Assignment Results - Dater School</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #5e72e4;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(94, 114, 228, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab.active {
+            color: #5e72e4;
+            border-bottom-color: #5e72e4;
+        }
+
+        .tab:hover:not(.active) {
+            color: #333;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .submissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .submission-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .submission-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .student-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .student-info {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .rankings-list {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+
+        .rank-number {
+            font-weight: bold;
+            color: #5e72e4;
+            margin-right: 10px;
+        }
+
+        .club-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .club-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .club-card-header {
+            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            color: white;
+            padding: 15px;
+        }
+
+        .club-card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .club-capacity {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .club-card-body {
+            padding: 15px;
+        }
+
+        .assigned-students {
+            list-style: none;
+            padding: 0;
+        }
+
+        .assigned-student {
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .assigned-student.primary {
+            background: #e3f2fd;
+            border-left: 3px solid #2196f3;
+        }
+
+        .preference-badge {
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 12px;
+            background: #5e72e4;
+            color: white;
+        }
+
+        .warning-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-banner {
+            background: #d4edda;
+            border: 2px solid #4caf50;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-title {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #5e72e4;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .no-data-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .no-data-text {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                flex-direction: column;
+            }
+            
+            .tabs {
+                overflow-x: auto;
+            }
+        }
+
+        .countdown {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .processing {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Club Assignment Results</h1>
+            <p>Dater School 2025-2026</p>
+        </div>
+
+        <div class="countdown" id="countdown">
+            Loading deadline status...
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-label">Total Submissions</div>
+                <div class="status-value" id="totalSubmissions">0</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">4th Grade</div>
+                <div class="status-value" id="grade4Count">0</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">5th Grade</div>
+                <div class="status-value" id="grade5Count">0</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Last Update</div>
+                <div class="status-value" id="lastUpdate">--</div>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="warning-banner" id="warningBanner">
+                ⚠️ Registration is still open. Final assignments will be made after September 21st, 2025.
+            </div>
+
+            <div class="success-banner" id="successBanner">
+                ✅ Registration closed. Club assignments have been finalized!
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Data</button>
+                <button class="btn btn-success" onclick="runAssignment()" id="assignBtn" style="display:none">🎲 Run Final Assignment</button>
+                <button class="btn btn-secondary" onclick="exportData()">📥 Export to CSV</button>
+                <button class="btn btn-danger" onclick="clearAssignments()">🗑️ Clear Assignments</button>
+                <button class="btn btn-danger" onclick="clearAllSubmissions()" style="margin-left: 10px;">🧹 Clear All Submissions</button>
+                
+                <div class="filter-group">
+                    <label>Filter by Grade:</label>
+                    <select id="gradeFilter" onchange="filterData()">
+                        <option value="all">All Grades</option>
+                        <option value="4">4th Grade</option>
+                        <option value="5">5th Grade</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('submissions')">📝 Submissions</button>
+                <button class="tab" onclick="switchTab('assignments')">🎯 Club Assignments</button>
+                <button class="tab" onclick="switchTab('statistics')">📈 Statistics</button>
+            </div>
+
+            <div class="tab-content active" id="submissions-tab">
+                <h2>Current Submissions</h2>
+                <div class="submissions-grid" id="submissionsGrid">
+                    <div class="no-data">
+                        <div class="no-data-icon">📭</div>
+                        <div class="no-data-text">No submissions yet</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="assignments-tab">
+                <h2>Club Assignments</h2>
+                <div class="club-results" id="clubResults">
+                    <div class="no-data">
+                        <div class="no-data-icon">⏳</div>
+                        <div class="no-data-text">Assignments will be available after the deadline</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="statistics-tab">
+                <h2>Assignment Statistics</h2>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-title">Students with 1st Choice</div>
+                        <div class="stat-value" id="firstChoiceCount">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Students with 2nd Choice</div>
+                        <div class="stat-value" id="secondChoiceCount">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Students with 3rd Choice</div>
+                        <div class="stat-value" id="thirdChoiceCount">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Average Preference Rank</div>
+                        <div class="stat-value" id="avgRank">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANT: Replace with your Azure Function URL
+        const API_URL = 'https://dater-club-functions-35179.azurewebsites.net/api/club-registration';
+        
+        const clubs = {
+            '4': [
+                { id: 'yard-games-4', name: 'Yard Games - 4th Grade', capacity: 20 },
+                { id: 'yoga-4', name: 'Yoga Club - 4th Grade', capacity: 20 },
+                { id: 'flag-football-4', name: 'Flag Football - 4th Grade', capacity: 24 },
+                { id: 'art-winter', name: 'Art Club (Winter) - 4th & 5th', capacity: 20 },
+                { id: 'art-spring', name: 'Art Club (Spring) - 4th & 5th', capacity: 20 },
+                { id: 'robotics-4', name: 'Lego Robotics - 4th Grade', capacity: 24 }
+            ],
+            '5': [
+                { id: 'yard-games-5', name: 'Yard Games - 5th Grade', capacity: 20 },
+                { id: 'yoga-5', name: 'Yoga Club - 5th Grade', capacity: 20 },
+                { id: 'flag-football-5', name: 'Flag Football - 5th Grade', capacity: 24 },
+                { id: 'art-winter', name: 'Art Club (Winter) - 4th & 5th', capacity: 20 },
+                { id: 'art-spring', name: 'Art Club (Spring) - 4th & 5th', capacity: 20 },
+                { id: 'robotics-5', name: 'Lego Robotics - 5th Grade', capacity: 24 }
+            ]
+        };
+
+        let submissions = [];
+        let assignments = {};
+        let currentFilter = 'all';
+
+        function updateCountdown() {
+            const deadline = new Date('2025-09-21T23:59:59');
+            const now = new Date();
+            const countdown = document.getElementById('countdown');
+            const assignBtn = document.getElementById('assignBtn');
+            
+            if (now > deadline) {
+                countdown.textContent = '✅ Registration is CLOSED - Assignments can now be finalized';
+                countdown.style.background = '#4caf50';
+                assignBtn.style.display = 'inline-block';
+                document.getElementById('successBanner').style.display = 'block';
+                document.getElementById('warningBanner').style.display = 'none';
+            } else {
+                const diff = deadline - now;
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                
+                countdown.textContent = `⏰ Registration closes in: ${days} days, ${hours} hours, ${minutes} minutes`;
+                document.getElementById('warningBanner').style.display = 'block';
+                document.getElementById('successBanner').style.display = 'none';
+            }
+        }
+
+        async function refreshData() {
+            try {
+                // Show loading state
+                document.getElementById('lastUpdate').textContent = 'Loading...';
+                
+                // Fetch submissions from Azure
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Failed to fetch submissions');
+                
+                const data = await response.json();
+                submissions = data.submissions || [];
+                
+                // Fetch assignments
+                const assignResponse = await fetch(`${API_URL}?type=assignments`);
+                if (assignResponse.ok) {
+                    const assignData = await assignResponse.json();
+                    // Convert array to object format
+                    assignments = {};
+                    assignData.assignments.forEach(item => {
+                        assignments[item.clubId] = {
+                            name: item.clubName,
+                            capacity: item.capacity,
+                            students: item.students
+                        };
+                    });
+                }
+                
+                updateStats();
+                displaySubmissions();
+                displayAssignments();
+                updateStatistics();
+                
+                // Update last refresh time
+                const now = new Date();
+                document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('lastUpdate').textContent = 'Error loading';
+                alert('Error loading data. Please check your connection and try again.');
+            }
+        }
+
+        function updateStats() {
+            const total = submissions.length;
+            const grade4 = submissions.filter(s => s.grade === '4').length;
+            const grade5 = submissions.filter(s => s.grade === '5').length;
+            
+            document.getElementById('totalSubmissions').textContent = total;
+            document.getElementById('grade4Count').textContent = grade4;
+            document.getElementById('grade5Count').textContent = grade5;
+        }
+
+        function displaySubmissions() {
+            const grid = document.getElementById('submissionsGrid');
+            let filteredSubmissions = submissions;
+            
+            if (currentFilter !== 'all') {
+                filteredSubmissions = submissions.filter(s => s.grade === currentFilter);
+            }
+            
+            if (filteredSubmissions.length === 0) {
+                grid.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">📭</div>
+                        <div class="no-data-text">No submissions yet</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = filteredSubmissions.map(submission => {
+                const clubList = submission.rankings.map(r => {
+                    const club = findClubById(r.clubId, submission.grade);
+                    return `
+                        <div class="ranking-item">
+                            <div><span class="rank-number">${r.rank}.</span> ${club ? club.name : r.clubId}</div>
+                        </div>
+                    `;
+                }).join('');
+                
+                return `
+                    <div class="submission-card">
+                        <div class="student-name">${submission.studentName}
+                            <button class="btn btn-danger" style="float: right; padding: 5px 10px; font-size: 0.8rem;" onclick="deleteSubmission('${submission.studentName}', '${submission.grade}')">❌ Delete</button>
+                        </div>
+                        <div class="student-info">
+                            Grade ${submission.grade} | Parent: ${submission.parentName}<br>
+                            📧 ${submission.email}<br>
+                            📱 ${submission.phone}<br>
+                            🕐 ${new Date(submission.timestamp).toLocaleString()}
+                        </div>
+                        <div class="rankings-list">
+                            <strong>Club Preferences:</strong>
+                            ${clubList}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function findClubById(clubId, grade) {
+            const allClubs = [...clubs['4'], ...clubs['5']];
+            return allClubs.find(c => c.id === clubId);
+        }
+
+        async function runAssignment() {
+            if (!confirm('Run final club assignments? This will assign all students to clubs based on their preferences.')) {
+                return;
+            }
+            
+            try {
+                // Show loading state
+                const assignBtn = document.getElementById('assignBtn');
+                assignBtn.textContent = 'Processing...';
+                assignBtn.disabled = true;
+                
+                // Initialize assignment structure
+                assignments = {};
+                const allClubs = [...clubs['4'], ...clubs['5']];
+                
+                // Initialize each club with empty arrays
+                allClubs.forEach(club => {
+                    if (!assignments[club.id]) {
+                        assignments[club.id] = {
+                            name: club.name,
+                            capacity: club.capacity,
+                            students: []
+                        };
+                    }
+                });
+                
+                // Shuffle submissions for randomization
+                const shuffledSubmissions = [...submissions].sort(() => Math.random() - 0.5);
+                
+                // First pass: Try to give everyone their first choice
+                const unassigned = [];
+                
+                shuffledSubmissions.forEach(submission => {
+                    let assigned = false;
+                    
+                    for (let ranking of submission.rankings) {
+                        const clubId = ranking.clubId;
+                        const club = assignments[clubId];
+                        
+                        if (club && club.students.length < club.capacity) {
+                            club.students.push({
+                                name: submission.studentName,
+                                grade: submission.grade,
+                                preference: ranking.rank,
+                                email: submission.email,
+                                parent: submission.parentName
+                            });
+                            assigned = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!assigned) {
+                        unassigned.push(submission);
+                    }
+                });
+                
+                // Second pass: Try to place unassigned students
+                unassigned.forEach(submission => {
+                    // Find any club with space
+                    const gradeClubs = clubs[submission.grade];
+                    for (let club of gradeClubs) {
+                        if (assignments[club.id].students.length < club.capacity) {
+                            assignments[club.id].students.push({
+                                name: submission.studentName,
+                                grade: submission.grade,
+                                preference: 99, // Not their preference
+                                email: submission.email,
+                                parent: submission.parentName
+                            });
+                            break;
+                        }
+                    }
+                });
+                
+                // Save assignments to Azure
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'assignment',
+                        assignments: assignments
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to save assignments');
+                
+                // Refresh display
+                displayAssignments();
+                updateStatistics();
+                
+                alert('Club assignments completed successfully!');
+            } catch (error) {
+                console.error('Assignment error:', error);
+                alert('Error running assignments. Please try again.');
+            } finally {
+                const assignBtn = document.getElementById('assignBtn');
+                assignBtn.textContent = '🎲 Run Final Assignment';
+                assignBtn.disabled = false;
+            }
+        }
+
+        function displayAssignments() {
+            const container = document.getElementById('clubResults');
+            
+            if (Object.keys(assignments).length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">⏳</div>
+                        <div class="no-data-text">Assignments will be available after the deadline</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const filteredAssignments = currentFilter === 'all' 
+                ? assignments 
+                : Object.fromEntries(
+                    Object.entries(assignments).filter(([clubId, data]) => {
+                        return clubId.includes(`-${currentFilter}`) || clubId.includes('art-');
+                    })
+                );
+            
+            container.innerHTML = Object.entries(filteredAssignments).map(([clubId, data]) => {
+                const studentList = data.students
+                    .sort((a, b) => a.preference - b.preference)
+                    .map(student => {
+                        const isPrimary = student.preference <= 3;
+                        return `
+                            <li class="assigned-student ${isPrimary ? 'primary' : ''}">
+                                <span>${student.name} (Grade ${student.grade})</span>
+                                <span class="preference-badge">Choice #${student.preference === 99 ? 'Alt' : student.preference}</span>
+                            </li>
+                        `;
+                    }).join('');
+                
+                return `
+                    <div class="club-card">
+                        <div class="club-card-header">
+                            <div class="club-card-title">${data.name}</div>
+                            <div class="club-capacity">${data.students.length} / ${data.capacity} students</div>
+                        </div>
+                        <div class="club-card-body">
+                            <ul class="assigned-students">
+                                ${studentList || '<li style="color: #999;">No students assigned yet</li>'}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStatistics() {
+            if (Object.keys(assignments).length === 0) {
+                document.getElementById('firstChoiceCount').textContent = '-';
+                document.getElementById('secondChoiceCount').textContent = '-';
+                document.getElementById('thirdChoiceCount').textContent = '-';
+                document.getElementById('avgRank').textContent = '-';
+                return;
+            }
+            
+            let firstChoice = 0;
+            let secondChoice = 0;
+            let thirdChoice = 0;
+            let totalRank = 0;
+            let totalStudents = 0;
+            
+            Object.values(assignments).forEach(club => {
+                club.students.forEach(student => {
+                    if (student.preference === 1) firstChoice++;
+                    else if (student.preference === 2) secondChoice++;
+                    else if (student.preference === 3) thirdChoice++;
+                    
+                    if (student.preference !== 99) {
+                        totalRank += student.preference;
+                        totalStudents++;
+                    }
+                });
+            });
+            
+            document.getElementById('firstChoiceCount').textContent = firstChoice;
+            document.getElementById('secondChoiceCount').textContent = secondChoice;
+            document.getElementById('thirdChoiceCount').textContent = thirdChoice;
+            document.getElementById('avgRank').textContent = totalStudents > 0 
+                ? (totalRank / totalStudents).toFixed(1) 
+                : '-';
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function filterData() {
+            currentFilter = document.getElementById('gradeFilter').value;
+            displaySubmissions();
+            displayAssignments();
+        }
+
+        function exportData() {
+            if (Object.keys(assignments).length === 0) {
+                alert('No assignments to export yet. Run assignments first.');
+                return;
+            }
+            
+            let csv = 'Club,Student Name,Grade,Parent Name,Email,Phone,Preference Rank\n';
+            
+            Object.entries(assignments).forEach(([clubId, data]) => {
+                data.students.forEach(student => {
+                    // Find full submission data
+                    const submission = submissions.find(s => s.studentName === student.name);
+                    if (submission) {
+                        csv += `"${data.name}","${student.name}","${student.grade}","${submission.parentName}","${submission.email}","${submission.phone}","${student.preference}"\n`;
+                    }
+                });
+            });
+            
+            // Create download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `club_assignments_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        async function clearAssignments() {
+            if (confirm('Clear all assignments? This cannot be undone.')) {
+                try {
+                    const response = await fetch(`${API_URL}?type=assignments`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to clear assignments');
+                    
+                    assignments = {};
+                    displayAssignments();
+                    updateStatistics();
+                    alert('Assignments cleared.');
+                } catch (error) {
+                    console.error('Error clearing assignments:', error);
+                    alert('Error clearing assignments. Please try again.');
+                }
+            }
+        }
+
+        async function deleteSubmission(studentName, grade) {
+            if (!confirm(`Delete submission for ${studentName}? This cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}?studentName=${encodeURIComponent(studentName)}&grade=${grade}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to delete submission');
+                }
+                
+                // Refresh data to show updated list
+                refreshData();
+                alert(`Submission for ${studentName} deleted successfully.`);
+            } catch (error) {
+                console.error('Error deleting submission:', error);
+                alert(`Error deleting submission: ${error.message}`);
+            }
+        }
+        
+        async function clearAllSubmissions() {
+            if (!confirm('Delete ALL submissions? This will permanently remove all parent registrations and cannot be undone!')) {
+                return;
+            }
+            
+            // Double confirmation for this dangerous action
+            if (!confirm('Are you absolutely sure? This will delete ALL submission data permanently!')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}?type=submissions`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Failed to clear all submissions');
+                
+                // Clear local data and refresh display
+                submissions = [];
+                updateStats();
+                displaySubmissions();
+                
+                // Also clear assignments since they depend on submissions
+                assignments = {};
+                displayAssignments();
+                updateStatistics();
+                
+                alert('All submissions have been cleared.');
+            } catch (error) {
+                console.error('Error clearing all submissions:', error);
+                alert('Error clearing submissions. Please try again.');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCountdown();
+            setInterval(updateCountdown, 60000); // Update every minute
+            refreshData();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(refreshData, 30000);
+        });
+    </script>
+</body>
+</html>

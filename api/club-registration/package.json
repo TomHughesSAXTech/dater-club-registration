@@ -1,0 +1,9 @@
+{
+  "name": "club-registration-api",
+  "version": "1.0.0",
+  "description": "Azure Function API for school club registration",
+  "main": "index.js",
+  "dependencies": {
+    "@azure/data-tables": "^13.2.2"
+  }
+}

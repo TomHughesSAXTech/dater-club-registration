@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dater School Club Registration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 150px;
+            height: auto;
+            margin: 0 auto 20px;
+            display: block;
+            filter: brightness(0) invert(1);
+            opacity: 0.95;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .deadline-banner {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .form-container {
+            padding: 40px 30px;
+        }
+
+        .form-section {
+            margin-bottom: 35px;
+        }
+
+        .form-section h2 {
+            color: #5e72e4;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #5e72e4;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #5e72e4;
+            box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.1);
+        }
+
+        .club-rankings {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .club-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            cursor: move;
+        }
+
+        .club-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .club-item.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .club-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .club-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .club-rank {
+            background: #5e72e4;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .club-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 10px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        }
+
+        .club-item:hover .club-description {
+            max-height: 200px;
+            padding-top: 10px;
+        }
+
+        .club-details {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .club-detail {
+            background: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .drag-handle {
+            display: inline-block;
+            margin-right: 10px;
+            cursor: move;
+            color: #999;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+
+        .drag-handle:hover {
+            color: #5e72e4;
+        }
+
+        .drag-instruction {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drag-instruction-icon {
+            font-size: 1.5rem;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 40px auto 0;
+            box-shadow: 0 5px 15px rgba(94, 114, 228, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(94, 114, 228, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            display: none;
+            background: #4caf50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            display: none;
+            background: #f44336;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2196f3;
+        }
+
+        .instructions h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+            
+            .club-details {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://cmsv2-assets.apptegy.net/uploads/15890/file/3580934/e71d2957-a141-4794-9d9b-b1c9c426d811.png" alt="Dater School Logo" class="logo">
+            <h1>🎨 Dater School Club Registration</h1>
+            <p>2025-2026 School Year</p>
+        </div>
+        
+        <div class="deadline-banner">
+            ⏰ Registration Deadline: September 21st, 2025
+        </div>
+
+        <div class="form-container">
+            <div class="instructions">
+                <h3>📋 How to Register:</h3>
+                <ul>
+                    <li>Fill in all student and parent information</li>
+                    <li>Drag and drop clubs to rank them (1 = most preferred)</li>
+                    <li>Submit your choices before the deadline</li>
+                    <li>If submitting multiple times, only your last submission counts</li>
+                </ul>
+            </div>
+
+            <form id="registrationForm">
+                <div class="form-section">
+                    <h2>Student Information</h2>
+                    <div class="form-group">
+                        <label for="studentName">Student Name *</label>
+                        <input type="text" id="studentName" name="studentName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="grade">Grade *</label>
+                        <select id="grade" name="grade" required>
+                            <option value="">Select Grade</option>
+                            <option value="4">4th Grade</option>
+                            <option value="5">5th Grade</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Parent/Guardian Information</h2>
+                    <div class="form-group">
+                        <label for="parentName">Parent/Guardian Name *</label>
+                        <input type="text" id="parentName" name="parentName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Club Rankings</h2>
+                    <p style="color: #666; margin-bottom: 15px;">Drag clubs to rank them in order of preference (1 = most preferred)</p>
+                    <div class="drag-instruction">
+                        <span class="drag-instruction-icon">👆</span>
+                        <span>Drag the ☰ handle or click and hold any club to reorder. Hover over a club to see its full description.</span>
+                    </div>
+                    <div class="club-rankings" id="clubRankings">
+                        <!-- Clubs will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Submit Registration</button>
+                
+                <div class="success-message" id="successMessage">
+                    ✅ Registration submitted successfully! Thank you for registering.
+                </div>
+                
+                <div class="error-message" id="errorMessage">
+                    ❌ Registration is closed. The deadline was September 21st, 2025.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const clubs = {
+            '4': [
+                {
+                    id: 'yard-games-4',
+                    name: 'Yard Games - 4th Grade',
+                    description: 'Learn how to play various yard games and ultimate frisbee with Mr. Quinlan.',
+                    season: 'Spring (May-June)',
+                    capacity: '20 students',
+                    note: 'May run as a recess club'
+                },
+                {
+                    id: 'yoga-4',
+                    name: 'Yoga Club - 4th Grade',
+                    description: 'Learn and practice basic yoga postures and mindful breathing. A great way to reduce stress and practice mindful movement.',
+                    season: 'Winter (January-March)',
+                    capacity: '20 students'
+                },
+                {
+                    id: 'flag-football-4',
+                    name: 'Flag Football - 4th Grade',
+                    description: 'High energy program played on the grass field (weather permitted) with lots of fun!',
+                    season: 'October',
+                    capacity: '24 students'
+                },
+                {
+                    id: 'art-winter',
+                    name: 'Art Club (Winter) - 4th & 5th Grade',
+                    description: 'Express creativity through various art forms! Work on school-wide and independent projects.',
+                    season: 'Winter',
+                    capacity: '20 students (grades combined)'
+                },
+                {
+                    id: 'art-spring',
+                    name: 'Art Club (Spring) - 4th & 5th Grade',
+                    description: 'Express creativity through various art forms! Work on school-wide and independent projects.',
+                    season: 'Spring',
+                    capacity: '20 students (grades combined)'
+                },
+                {
+                    id: 'robotics-4',
+                    name: 'Lego Robotics Club - 4th Grade',
+                    description: 'Build robots using LEGO Mindstorms and Tetrix Prime kits. Emphasis on creativity and problem solving. May exhibit at STEM night!',
+                    season: 'October-February',
+                    capacity: '24 students',
+                    frequency: '1-2x per week'
+                }
+            ],
+            '5': [
+                {
+                    id: 'yard-games-5',
+                    name: 'Yard Games - 5th Grade',
+                    description: 'Learn how to play various yard games and ultimate frisbee with Mr. Quinlan.',
+                    season: 'Spring (May-June)',
+                    capacity: '20 students',
+                    note: 'May run as a recess club'
+                },
+                {
+                    id: 'yoga-5',
+                    name: 'Yoga Club - 5th Grade',
+                    description: 'Learn and practice basic yoga postures and mindful breathing. A great way to reduce stress and practice mindful movement.',
+                    season: 'Winter (January-March)',
+                    capacity: '20 students'
+                },
+                {
+                    id: 'flag-football-5',
+                    name: 'Flag Football - 5th Grade',
+                    description: 'High energy program played on the grass field (weather permitted) with lots of fun!',
+                    season: 'October',
+                    capacity: '24 students'
+                },
+                {
+                    id: 'art-winter',
+                    name: 'Art Club (Winter) - 4th & 5th Grade',
+                    description: 'Express creativity through various art forms! Work on school-wide and independent projects.',
+                    season: 'Winter',
+                    capacity: '20 students (grades combined)'
+                },
+                {
+                    id: 'art-spring',
+                    name: 'Art Club (Spring) - 4th & 5th Grade',
+                    description: 'Express creativity through various art forms! Work on school-wide and independent projects.',
+                    season: 'Spring',
+                    capacity: '20 students (grades combined)'
+                },
+                {
+                    id: 'robotics-5',
+                    name: 'Lego Robotics Club - 5th Grade',
+                    description: 'Build robots using LEGO Mindstorms and Tetrix Prime kits. Emphasis on creativity and problem solving. May exhibit at STEM night!',
+                    season: 'October-February',
+                    capacity: '24 students',
+                    frequency: '1-2x per week'
+                }
+            ]
+        };
+
+        let draggedElement = null;
+
+        function initializeClubs() {
+            const gradeSelect = document.getElementById('grade');
+            const clubRankings = document.getElementById('clubRankings');
+            
+            gradeSelect.addEventListener('change', function() {
+                const selectedGrade = this.value;
+                clubRankings.innerHTML = '';
+                
+                if (selectedGrade) {
+                    const gradeClubs = clubs[selectedGrade];
+                    gradeClubs.forEach((club, index) => {
+                        const clubElement = createClubElement(club, index + 1);
+                        clubRankings.appendChild(clubElement);
+                    });
+                    
+                    attachDragListeners();
+                } else {
+                    clubRankings.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Please select a grade above to see available clubs</p>';
+                }
+            });
+            
+            // Show initial message
+            clubRankings.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Please select a grade above to see available clubs</p>';
+        }
+
+        function createClubElement(club, rank) {
+            const div = document.createElement('div');
+            div.className = 'club-item';
+            div.draggable = true;
+            div.dataset.clubId = club.id;
+            
+            div.innerHTML = `
+                <div class="club-header">
+                    <div>
+                        <span class="drag-handle">☰</span>
+                        <span class="club-name">${club.name}</span>
+                    </div>
+                    <span class="club-rank">Rank #${rank}</span>
+                </div>
+                <div class="club-description">${club.description}</div>
+                <div class="club-details">
+                    <span class="club-detail">📅 ${club.season}</span>
+                    <span class="club-detail">👥 ${club.capacity}</span>
+                    ${club.frequency ? `<span class="club-detail">🕐 ${club.frequency}</span>` : ''}
+                    ${club.note ? `<span class="club-detail">ℹ️ ${club.note}</span>` : ''}
+                </div>
+            `;
+            
+            return div;
+        }
+
+        function attachDragListeners() {
+            const clubItems = document.querySelectorAll('.club-item');
+            
+            clubItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragenter', handleDragEnter);
+                item.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            updateRankNumbers();
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            // Optional: Add visual feedback
+        }
+
+        function handleDragLeave(e) {
+            // Optional: Remove visual feedback
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedElement !== this) {
+                const clubRankings = document.getElementById('clubRankings');
+                const allItems = Array.from(clubRankings.children);
+                const draggedIndex = allItems.indexOf(draggedElement);
+                const targetIndex = allItems.indexOf(this);
+                
+                if (draggedIndex < targetIndex) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+            }
+            
+            return false;
+        }
+
+        function updateRankNumbers() {
+            const clubItems = document.querySelectorAll('.club-item');
+            clubItems.forEach((item, index) => {
+                const rankElement = item.querySelector('.club-rank');
+                rankElement.textContent = `Rank #${index + 1}`;
+            });
+        }
+
+        // IMPORTANT: Replace with your Azure Function URL
+        const API_URL = 'https://dater-club-functions-35179.azurewebsites.net/api/club-registration';
+        
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            // Check if registration is still open
+            const deadline = new Date('2025-09-21T23:59:59');
+            const now = new Date();
+            
+            if (now > deadline) {
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('successMessage').style.display = 'none';
+                return;
+            }
+            
+            // Collect form data
+            const formData = {
+                studentName: document.getElementById('studentName').value,
+                grade: document.getElementById('grade').value,
+                parentName: document.getElementById('parentName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Collect club rankings
+            const clubItems = document.querySelectorAll('.club-item');
+            const rankings = [];
+            clubItems.forEach((item, index) => {
+                rankings.push({
+                    clubId: item.dataset.clubId,
+                    rank: index + 1
+                });
+            });
+            formData.rankings = rankings;
+            
+            // Show loading state
+            const submitBtn = document.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+            
+            try {
+                // Send to Azure Function
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Show success message
+                    document.getElementById('successMessage').style.display = 'block';
+                    document.getElementById('errorMessage').style.display = 'none';
+                    
+                    // Scroll to success message
+                    document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Optional: Reset form after a delay
+                    setTimeout(() => {
+                        if (confirm('Would you like to submit another registration?')) {
+                            document.getElementById('registrationForm').reset();
+                            document.getElementById('clubRankings').innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Please select a grade above to see available clubs</p>';
+                            document.getElementById('successMessage').style.display = 'none';
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    }, 3000);
+                } else {
+                    throw new Error(result.error || 'Submission failed');
+                }
+            } catch (error) {
+                console.error('Submission error:', error);
+                alert('Error submitting registration. Please try again or contact the school.');
+            } finally {
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeClubs();
+            document.getElementById('registrationForm').addEventListener('submit', handleSubmit);
+        });
+    </script>
+</body>
+</html>
