@@ -49,7 +49,20 @@ async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
             });
         }
 
+        // Clear existing assignments first (before checking if there are submissions)
+        const existingAssignments = assignmentsTableClient.listEntities();
+        for await (const entity of existingAssignments) {
+            await assignmentsTableClient.deleteEntity(entity.partitionKey, entity.rowKey);
+        }
+        
+        // Clear existing waitlists
+        const existingWaitlists = waitlistsTableClient.listEntities();
+        for await (const entity of existingWaitlists) {
+            await waitlistsTableClient.deleteEntity(entity.partitionKey, entity.rowKey);
+        }
+
         if (submissions.length === 0) {
+            context.log('No submissions to process - assignments and waitlists cleared');
             return; // No submissions to process
         }
 
@@ -123,18 +136,6 @@ async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
         
         // Students are only assigned to clubs they specifically ranked
         // If all their ranked clubs are full, they go on waitlists only
-        
-        // Clear existing assignments
-        const existingAssignments = assignmentsTableClient.listEntities();
-        for await (const entity of existingAssignments) {
-            await assignmentsTableClient.deleteEntity(entity.partitionKey, entity.rowKey);
-        }
-        
-        // Clear existing waitlists
-        const existingWaitlists = waitlistsTableClient.listEntities();
-        for await (const entity of existingWaitlists) {
-            await waitlistsTableClient.deleteEntity(entity.partitionKey, entity.rowKey);
-        }
         
         // Save new assignments to storage
         for (const [clubId, data] of Object.entries(assignments)) {
