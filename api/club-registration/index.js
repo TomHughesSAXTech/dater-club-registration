@@ -8,6 +8,152 @@ const connectionString = process.env["AZURE_STORAGE_CONNECTION_STRING"];
 const submissionsTable = "ClubSubmissions";
 const assignmentsTable = "ClubAssignments";
 
+// Club definitions with capacities
+const clubs = {
+    '4': [
+        { id: 'yard-games-4', name: 'Yard Games - 4th Grade', capacity: 20 },
+        { id: 'yoga-4', name: 'Yoga Club - 4th Grade', capacity: 20 },
+        { id: 'flag-football-4', name: 'Flag Football - 4th Grade', capacity: 24 },
+        { id: 'art-winter', name: 'Art Club (Winter) - 4th & 5th', capacity: 20 },
+        { id: 'art-spring', name: 'Art Club (Spring) - 4th & 5th', capacity: 20 },
+        { id: 'robotics-4', name: 'Lego Robotics - 4th Grade', capacity: 24 }
+    ],
+    '5': [
+        { id: 'yard-games-5', name: 'Yard Games - 5th Grade', capacity: 20 },
+        { id: 'yoga-5', name: 'Yoga Club - 5th Grade', capacity: 20 },
+        { id: 'flag-football-5', name: 'Flag Football - 5th Grade', capacity: 24 },
+        { id: 'art-winter', name: 'Art Club (Winter) - 4th & 5th', capacity: 20 },
+        { id: 'art-spring', name: 'Art Club (Spring) - 4th & 5th', capacity: 20 },
+        { id: 'robotics-5', name: 'Lego Robotics - 5th Grade', capacity: 24 }
+    ]
+};
+
+// Live assignment function with proper randomization
+async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
+    try {
+        // Get all current submissions
+        const submissions = [];
+        const entities = tableClient.listEntities();
+        for await (const entity of entities) {
+            submissions.push({
+                studentName: entity.studentName,
+                grade: entity.grade,
+                parentName: entity.parentName,
+                email: entity.email,
+                phone: entity.phone,
+                rankings: JSON.parse(entity.rankings),
+                timestamp: entity.timestamp
+            });
+        }
+
+        if (submissions.length === 0) {
+            return; // No submissions to process
+        }
+
+        // Initialize assignment structure
+        const assignments = {};
+        const allClubs = [...clubs['4'], ...clubs['5']];
+        
+        // Initialize each club with empty arrays
+        allClubs.forEach(club => {
+            assignments[club.id] = {
+                name: club.name,
+                capacity: club.capacity,
+                students: []
+            };
+        });
+
+        // Randomize submissions using Fisher-Yates shuffle algorithm
+        const shuffledSubmissions = [...submissions];
+        for (let i = shuffledSubmissions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledSubmissions[i], shuffledSubmissions[j]] = [shuffledSubmissions[j], shuffledSubmissions[i]];
+        }
+
+        // First pass: Try to assign students to their preferred choices
+        const unassigned = [];
+        
+        shuffledSubmissions.forEach(submission => {
+            let assigned = false;
+            
+            // Try each preference in order
+            for (let ranking of submission.rankings.sort((a, b) => a.rank - b.rank)) {
+                const clubId = ranking.clubId;
+                const club = assignments[clubId];
+                
+                if (club && club.students.length < club.capacity) {
+                    club.students.push({
+                        name: submission.studentName,
+                        grade: submission.grade,
+                        preference: ranking.rank,
+                        email: submission.email,
+                        parent: submission.parentName,
+                        timestamp: submission.timestamp
+                    });
+                    assigned = true;
+                    break;
+                }
+            }
+            
+            if (!assigned) {
+                unassigned.push(submission);
+            }
+        });
+        
+        // Second pass: Try to place unassigned students in any available club for their grade
+        unassigned.forEach(submission => {
+            const gradeClubs = clubs[submission.grade] || [];
+            
+            // Randomize the order we try clubs
+            const shuffledGradeClubs = [...gradeClubs];
+            for (let i = shuffledGradeClubs.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledGradeClubs[i], shuffledGradeClubs[j]] = [shuffledGradeClubs[j], shuffledGradeClubs[i]];
+            }
+            
+            for (let club of shuffledGradeClubs) {
+                if (assignments[club.id].students.length < club.capacity) {
+                    assignments[club.id].students.push({
+                        name: submission.studentName,
+                        grade: submission.grade,
+                        preference: 99, // Not their preference
+                        email: submission.email,
+                        parent: submission.parentName,
+                        timestamp: submission.timestamp
+                    });
+                    break;
+                }
+            }
+        });
+        
+        // Clear existing assignments
+        const existingAssignments = assignmentsTableClient.listEntities();
+        for await (const entity of existingAssignments) {
+            await assignmentsTableClient.deleteEntity(entity.partitionKey, entity.rowKey);
+        }
+        
+        // Save new assignments to storage
+        for (const [clubId, data] of Object.entries(assignments)) {
+            const entity = {
+                partitionKey: 'assignment',
+                rowKey: clubId,
+                clubId: clubId,
+                clubName: data.name,
+                capacity: data.capacity,
+                students: JSON.stringify(data.students),
+                lastUpdated: new Date().toISOString()
+            };
+            await assignmentsTableClient.createEntity(entity);
+        }
+        
+        context.log('Live assignments updated successfully');
+        
+    } catch (error) {
+        context.log.error('Error in live assignment:', error);
+        // Don't throw - we don't want assignment errors to prevent submission success
+    }
+}
+
 module.exports = async function (context, req) {
     context.res = {
         headers: {
@@ -135,6 +281,9 @@ module.exports = async function (context, req) {
                     
                     await tableClient.createEntity(entity);
                     
+                    // Run live assignment after each submission
+                    await runLiveAssignment(tableClient, assignmentsTableClient, context);
+                    
                     context.res.body = { success: true, message: 'Registration submitted successfully' };
                 }
                 break;
@@ -161,6 +310,10 @@ module.exports = async function (context, req) {
                     
                     try {
                         await tableClient.deleteEntity(partitionKey, rowKey);
+                        
+                        // Run live assignment after deletion
+                        await runLiveAssignment(tableClient, assignmentsTableClient, context);
+                        
                         context.res.body = { success: true, message: 'Submission deleted successfully' };
                     } catch (error) {
                         if (error.statusCode === 404) {

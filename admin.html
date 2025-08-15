@@ -412,11 +412,11 @@
 
         <div class="content">
             <div class="warning-banner" id="warningBanner">
-                ⚠️ Registration is still open. Final assignments will be made after September 21st, 2025.
+                🔄 Registration is open. Live assignments are updating automatically with each new submission.
             </div>
 
             <div class="success-banner" id="successBanner">
-                ✅ Registration closed. Club assignments have been finalized!
+                ✅ Registration closed. Live assignments are complete!
             </div>
 
             <div class="controls">
@@ -519,21 +519,15 @@
             const countdown = document.getElementById('countdown');
             const assignBtn = document.getElementById('assignBtn');
             
+            // Always show assignment button for live assignments
+            assignBtn.style.display = 'inline-block';
+            
             if (now > deadline) {
-                countdown.textContent = '🔒 Registration CLOSED - Final assignments can be processed';
+                countdown.textContent = '🔒 Registration CLOSED - Live assignments active';
                 countdown.style.background = '#4caf50';
                 countdown.classList.add('processing');
-                assignBtn.style.display = 'inline-block';
                 document.getElementById('successBanner').style.display = 'block';
                 document.getElementById('warningBanner').style.display = 'none';
-                
-                // Show notification when deadline just passed
-                if (!window.deadlineNotificationShown) {
-                    setTimeout(() => {
-                        alert('🔔 Registration deadline has passed! You can now run final club assignments.');
-                        window.deadlineNotificationShown = true;
-                    }, 1000);
-                }
             } else {
                 const diff = deadline - now;
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -543,12 +537,12 @@
                 
                 // Show more precise countdown when less than 1 hour remains
                 if (days === 0 && hours === 0) {
-                    countdown.textContent = `⏰ Registration closes in: ${minutes}m ${seconds}s`;
+                    countdown.textContent = `⏰ Registration closes in: ${minutes}m ${seconds}s - Live assignments active`;
                     countdown.style.background = '#ff6b6b';
                     countdown.classList.add('processing');
                 } else {
-                    countdown.textContent = `⏰ Registration closes in: ${days} days, ${hours} hours, ${minutes} minutes`;
-                    countdown.style.background = '#ff6b6b';
+                    countdown.textContent = `⏰ Registration closes in: ${days} days, ${hours} hours, ${minutes} minutes - Live assignments active`;
+                    countdown.style.background = '#5e72e4';
                     countdown.classList.remove('processing');
                 }
                 
