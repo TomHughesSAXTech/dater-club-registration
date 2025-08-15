@@ -694,15 +694,7 @@
                     // Scroll to success message
                     document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
                     
-                    // Optional: Reset form after a delay
-                    setTimeout(() => {
-                        if (confirm('Would you like to submit another registration?')) {
-                            document.getElementById('registrationForm').reset();
-                            document.getElementById('clubRankings').innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Please select a grade above to see available clubs</p>';
-                            document.getElementById('successMessage').style.display = 'none';
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                    }, 3000);
+                    // Just show thank you message - no prompt for another submission
                 } else {
                     throw new Error(result.error || 'Submission failed');
                 }
