@@ -144,6 +144,32 @@
             align-items: center;
             margin-bottom: 10px;
         }
+        
+        .club-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .remove-club-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .remove-club-btn:hover {
+            background: #d32f2f;
+            transform: scale(1.1);
+        }
 
         .club-name {
             font-weight: bold;
@@ -330,7 +356,9 @@
                 <h3>📋 How to Register:</h3>
                 <ul>
                     <li>Fill in all student and parent information</li>
-                    <li>Drag and drop clubs to rank them (1 = most preferred)</li>
+                    <li><strong>Remove clubs you're NOT interested in</strong> by clicking the ❌ button</li>
+                    <li>Drag and drop remaining clubs to rank them (1 = most preferred)</li>
+                    <li><strong>You will be assigned to ALL your ranked clubs</strong> until they fill up</li>
                     <li>Submit your choices before the deadline</li>
                     <li>If submitting multiple times, only your last submission counts</li>
                 </ul>
@@ -371,10 +399,10 @@
 
                 <div class="form-section">
                     <h2>Club Rankings</h2>
-                    <p style="color: #666; margin-bottom: 15px;">Drag clubs to rank them in order of preference (1 = most preferred)</p>
+                    <p style="color: #666; margin-bottom: 15px;"><strong>Remove unwanted clubs, then rank the rest.</strong> You'll be assigned to ALL your ranked clubs until they fill up!</p>
                     <div class="drag-instruction">
                         <span class="drag-instruction-icon">👆</span>
-                        <span>Drag the ☰ handle or click and hold any club to reorder. Hover over a club to see its full description.</span>
+                        <span>❌ Remove clubs you don't want • ☰ Drag to reorder remaining clubs • Hover for descriptions</span>
                     </div>
                     <div class="club-rankings" id="clubRankings">
                         <!-- Clubs will be dynamically inserted here -->
@@ -553,7 +581,10 @@
                         <span class="drag-handle">☰</span>
                         <span class="club-name">${club.name}</span>
                     </div>
-                    <span class="club-rank">Rank #${rank}</span>
+                    <div class="club-controls">
+                        <button class="remove-club-btn" onclick="removeClub(this)" title="Remove this club">❌</button>
+                        <span class="club-rank">Rank #${rank}</span>
+                    </div>
                 </div>
                 <div class="club-description">${club.description}</div>
                 <div class="club-details">
@@ -635,6 +666,29 @@
                 const rankElement = item.querySelector('.club-rank');
                 rankElement.textContent = `Rank #${index + 1}`;
             });
+        }
+        
+        function removeClub(button) {
+            // Prevent the event from bubbling up to the drag handlers
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            
+            const clubItem = button.closest('.club-item');
+            const clubName = clubItem.querySelector('.club-name').textContent;
+            
+            if (confirm(`Remove "${clubName}" from your list? You won't be assigned to this club.`)) {
+                clubItem.remove();
+                updateRankNumbers();
+                
+                // Show a message if no clubs remain
+                const remainingClubs = document.querySelectorAll('.club-item');
+                if (remainingClubs.length === 0) {
+                    const clubRankings = document.getElementById('clubRankings');
+                    clubRankings.innerHTML = '<p style="text-align: center; color: #ff6b6b; padding: 40px;">⚠️ You removed all clubs! You need at least one club to register.</p>';
+                }
+            }
         }
 
         // IMPORTANT: Azure Static Web Apps API endpoint

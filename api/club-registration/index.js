@@ -8,6 +8,7 @@ const connectionString = process.env["AZURE_STORAGE_CONNECTION_STRING"];
 const submissionsTable = "ClubSubmissions";
 const assignmentsTable = "ClubAssignments";
 const clubSettingsTable = "ClubSettings";
+const waitlistsTable = "ClubWaitlists";
 
 // Club definitions with capacities
 const clubs = {
@@ -31,6 +32,7 @@ const clubs = {
 
 // Live assignment function with proper randomization
 async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
+    const waitlistsTableClient = TableClient.fromConnectionString(connectionString, waitlistsTable);
     try {
         // Get all current submissions
         const submissions = [];
@@ -71,33 +73,50 @@ async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
             [shuffledSubmissions[i], shuffledSubmissions[j]] = [shuffledSubmissions[j], shuffledSubmissions[i]];
         }
 
-        // New multi-club assignment algorithm
-        // Each student can get multiple clubs based on availability and preferences
+        // New algorithm: Assign students to ALL their ranked clubs until those clubs fill up
         const studentAssignments = new Map(); // Track what each student has been assigned
+        const clubWaitlists = {}; // Track students who couldn't get into full clubs
         
+        // Initialize waitlists and student assignments
+        allClubs.forEach(club => {
+            clubWaitlists[club.id] = [];
+        });
         shuffledSubmissions.forEach(submission => {
             studentAssignments.set(submission.studentName, []);
         });
         
-        // First pass: Try to assign each student to their preferred choices in order
+        // Process each student's ranked clubs in order
         shuffledSubmissions.forEach(submission => {
             const sortedRankings = submission.rankings.sort((a, b) => a.rank - b.rank);
             
-            // Try each preference in order
+            // Try to assign student to ALL their ranked clubs
             for (let ranking of sortedRankings) {
                 const clubId = ranking.clubId;
                 const club = assignments[clubId];
                 
-                if (club && club.students.length < club.capacity) {
-                    club.students.push({
-                        name: submission.studentName,
-                        grade: submission.grade,
-                        preference: ranking.rank,
-                        email: submission.email,
-                        parent: submission.parentName,
-                        timestamp: submission.timestamp
-                    });
-                    studentAssignments.get(submission.studentName).push(clubId);
+                if (club) {
+                    if (club.students.length < club.capacity) {
+                        // Space available - assign to club
+                        club.students.push({
+                            name: submission.studentName,
+                            grade: submission.grade,
+                            preference: ranking.rank,
+                            email: submission.email,
+                            parent: submission.parentName,
+                            timestamp: submission.timestamp
+                        });
+                        studentAssignments.get(submission.studentName).push(clubId);
+                    } else {
+                        // Club is full - add to waitlist
+                        clubWaitlists[clubId].push({
+                            name: submission.studentName,
+                            grade: submission.grade,
+                            preference: ranking.rank,
+                            email: submission.email,
+                            parent: submission.parentName,
+                            timestamp: submission.timestamp
+                        });
+                    }
                 }
             }
         });
@@ -140,6 +159,12 @@ async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
             await assignmentsTableClient.deleteEntity(entity.partitionKey, entity.rowKey);
         }
         
+        // Clear existing waitlists
+        const existingWaitlists = waitlistsTableClient.listEntities();
+        for await (const entity of existingWaitlists) {
+            await waitlistsTableClient.deleteEntity(entity.partitionKey, entity.rowKey);
+        }
+        
         // Save new assignments to storage
         for (const [clubId, data] of Object.entries(assignments)) {
             const entity = {
@@ -152,6 +177,21 @@ async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
                 lastUpdated: new Date().toISOString()
             };
             await assignmentsTableClient.createEntity(entity);
+        }
+        
+        // Save waitlists to storage
+        for (const [clubId, waitlist] of Object.entries(clubWaitlists)) {
+            if (waitlist.length > 0) { // Only save if there are students waiting
+                const entity = {
+                    partitionKey: 'waitlist',
+                    rowKey: clubId,
+                    clubId: clubId,
+                    clubName: assignments[clubId].name,
+                    waitlist: JSON.stringify(waitlist),
+                    lastUpdated: new Date().toISOString()
+                };
+                await waitlistsTableClient.createEntity(entity);
+            }
         }
         
         context.log('Live assignments updated successfully');
@@ -181,6 +221,7 @@ module.exports = async function (context, req) {
     const tableClient = TableClient.fromConnectionString(connectionString, submissionsTable);
     const assignmentsTableClient = TableClient.fromConnectionString(connectionString, assignmentsTable);
     const clubSettingsTableClient = TableClient.fromConnectionString(connectionString, clubSettingsTable);
+    const waitlistsTableClient = TableClient.fromConnectionString(connectionString, waitlistsTable);
 
     try {
         // Create tables if they don't exist
@@ -191,6 +232,9 @@ module.exports = async function (context, req) {
             if (e.statusCode !== 409) throw e;
         });
         await clubSettingsTableClient.createTable().catch(e => {
+            if (e.statusCode !== 409) throw e;
+        });
+        await waitlistsTableClient.createTable().catch(e => {
             if (e.statusCode !== 409) throw e;
         });
 
@@ -219,6 +263,18 @@ module.exports = async function (context, req) {
                         };
                     }
                     context.res.body = { clubSettings };
+                } else if (req.query.type === 'waitlists') {
+                    // Get waitlists
+                    const waitlists = [];
+                    const waitlistEntities = waitlistsTableClient.listEntities();
+                    for await (const entity of waitlistEntities) {
+                        waitlists.push({
+                            clubId: entity.clubId,
+                            clubName: entity.clubName,
+                            waitlist: JSON.parse(entity.waitlist || '[]')
+                        });
+                    }
+                    context.res.body = { waitlists };
                 } else {
                     // Get all submissions
                     const submissions = [];
