@@ -467,10 +467,93 @@
             background: #f8d7da;
             color: #721c24;
         }
+
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-header h1 {
+            color: #0e1130;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: #f2c514;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 15px;
+            background: #f2c514;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(242, 197, 20, 0.3);
+        }
+
+        .login-error {
+            color: #dc3545;
+            margin-top: 15px;
+            display: none;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>🔐 Admin Access</h1>
+                <p>Enter password to access the admin panel</p>
+            </div>
+            <div class="login-form">
+                <input type="password" id="passwordInput" placeholder="Enter admin password" onkeypress="handlePasswordKeypress(event)">
+                <button onclick="checkPassword()">Login</button>
+                <div id="loginError" class="login-error">Incorrect password. Please try again.</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainContainer" class="container" style="display: none;">
         <div class="header">
             <h1>📊 Club Assignment Results</h1>
             <p>Dater School 2025-2026</p>
@@ -587,6 +670,54 @@
     </div>
 
     <script>
+        // Password protection
+        const ADMIN_PASSWORD = 'dater2025';
+        let isAuthenticated = false;
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const password = input.value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (password === ADMIN_PASSWORD) {
+                isAuthenticated = true;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainContainer').style.display = 'block';
+                
+                // Initialize the admin panel
+                updateCountdown();
+                refreshData();
+                
+                // Start auto-refresh and countdown timers
+                const deadline = new Date('2025-09-21T23:59:59');
+                const now = new Date();
+                const timeLeft = deadline - now;
+                
+                if (timeLeft <= 3600000) {
+                    setInterval(updateCountdown, 1000);
+                } else {
+                    setInterval(updateCountdown, 60000);
+                }
+                
+                setInterval(refreshData, 5000);
+            } else {
+                errorDiv.style.display = 'block';
+                input.value = '';
+                input.focus();
+                
+                // Hide error after 3 seconds
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function handlePasswordKeypress(event) {
+            if (event.key === 'Enter') {
+                checkPassword();
+            }
+        }
+
         // Azure Static Web Apps API endpoint
         const API_URL = '/api/club-registration';
         
@@ -1044,23 +1175,8 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            updateCountdown();
-            
-            // Update countdown more frequently when close to deadline
-            const deadline = new Date('2025-09-21T23:59:59');
-            const now = new Date();
-            const timeLeft = deadline - now;
-            
-            if (timeLeft <= 3600000) { // Less than 1 hour
-                setInterval(updateCountdown, 1000); // Update every second
-            } else {
-                setInterval(updateCountdown, 60000); // Update every minute
-            }
-            
-            refreshData();
-            
-            // Auto-refresh more frequently for real-time updates
-            setInterval(refreshData, 5000); // Refresh every 5 seconds instead of 30
+            // Focus on password input when page loads
+            document.getElementById('passwordInput').focus();
         });
     </script>
 </body>
