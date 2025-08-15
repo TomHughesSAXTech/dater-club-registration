@@ -7,6 +7,7 @@ const { TableClient } = require("@azure/data-tables");
 const connectionString = process.env["AZURE_STORAGE_CONNECTION_STRING"];
 const submissionsTable = "ClubSubmissions";
 const assignmentsTable = "ClubAssignments";
+const clubSettingsTable = "ClubSettings";
 
 // Club definitions with capacities
 const clubs = {
@@ -70,14 +71,20 @@ async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
             [shuffledSubmissions[i], shuffledSubmissions[j]] = [shuffledSubmissions[j], shuffledSubmissions[i]];
         }
 
-        // First pass: Try to assign students to their preferred choices
-        const unassigned = [];
+        // New multi-club assignment algorithm
+        // Each student can get multiple clubs based on availability and preferences
+        const studentAssignments = new Map(); // Track what each student has been assigned
         
         shuffledSubmissions.forEach(submission => {
-            let assigned = false;
+            studentAssignments.set(submission.studentName, []);
+        });
+        
+        // First pass: Try to assign each student to their preferred choices in order
+        shuffledSubmissions.forEach(submission => {
+            const sortedRankings = submission.rankings.sort((a, b) => a.rank - b.rank);
             
             // Try each preference in order
-            for (let ranking of submission.rankings.sort((a, b) => a.rank - b.rank)) {
+            for (let ranking of sortedRankings) {
                 const clubId = ranking.clubId;
                 const club = assignments[clubId];
                 
@@ -90,38 +97,39 @@ async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
                         parent: submission.parentName,
                         timestamp: submission.timestamp
                     });
-                    assigned = true;
-                    break;
+                    studentAssignments.get(submission.studentName).push(clubId);
                 }
-            }
-            
-            if (!assigned) {
-                unassigned.push(submission);
             }
         });
         
-        // Second pass: Try to place unassigned students in any available club for their grade
-        unassigned.forEach(submission => {
-            const gradeClubs = clubs[submission.grade] || [];
+        // Second pass: For students with no assignments, try to place them in any available club
+        shuffledSubmissions.forEach(submission => {
+            const currentAssignments = studentAssignments.get(submission.studentName);
             
-            // Randomize the order we try clubs
-            const shuffledGradeClubs = [...gradeClubs];
-            for (let i = shuffledGradeClubs.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffledGradeClubs[i], shuffledGradeClubs[j]] = [shuffledGradeClubs[j], shuffledGradeClubs[i]];
-            }
-            
-            for (let club of shuffledGradeClubs) {
-                if (assignments[club.id].students.length < club.capacity) {
-                    assignments[club.id].students.push({
-                        name: submission.studentName,
-                        grade: submission.grade,
-                        preference: 99, // Not their preference
-                        email: submission.email,
-                        parent: submission.parentName,
-                        timestamp: submission.timestamp
-                    });
-                    break;
+            // If student has no assignments, try to assign them to any available club for their grade
+            if (currentAssignments.length === 0) {
+                const gradeClubs = clubs[submission.grade] || [];
+                
+                // Randomize the order we try clubs
+                const shuffledGradeClubs = [...gradeClubs];
+                for (let i = shuffledGradeClubs.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffledGradeClubs[i], shuffledGradeClubs[j]] = [shuffledGradeClubs[j], shuffledGradeClubs[i]];
+                }
+                
+                for (let club of shuffledGradeClubs) {
+                    if (assignments[club.id].students.length < club.capacity) {
+                        assignments[club.id].students.push({
+                            name: submission.studentName,
+                            grade: submission.grade,
+                            preference: 99, // Not their preference
+                            email: submission.email,
+                            parent: submission.parentName,
+                            timestamp: submission.timestamp
+                        });
+                        studentAssignments.get(submission.studentName).push(club.id);
+                        break;
+                    }
                 }
             }
         });
@@ -172,6 +180,7 @@ module.exports = async function (context, req) {
 
     const tableClient = TableClient.fromConnectionString(connectionString, submissionsTable);
     const assignmentsTableClient = TableClient.fromConnectionString(connectionString, assignmentsTable);
+    const clubSettingsTableClient = TableClient.fromConnectionString(connectionString, clubSettingsTable);
 
     try {
         // Create tables if they don't exist
@@ -179,6 +188,9 @@ module.exports = async function (context, req) {
             if (e.statusCode !== 409) throw e; // 409 = already exists
         });
         await assignmentsTableClient.createTable().catch(e => {
+            if (e.statusCode !== 409) throw e;
+        });
+        await clubSettingsTableClient.createTable().catch(e => {
             if (e.statusCode !== 409) throw e;
         });
 
@@ -197,6 +209,16 @@ module.exports = async function (context, req) {
                         });
                     }
                     context.res.body = { assignments };
+                } else if (req.query.type === 'club-settings') {
+                    // Get club settings (enabled/disabled clubs)
+                    const clubSettings = {};
+                    const settingsEntities = clubSettingsTableClient.listEntities();
+                    for await (const entity of settingsEntities) {
+                        clubSettings[entity.clubId] = {
+                            enabled: entity.enabled
+                        };
+                    }
+                    context.res.body = { clubSettings };
                 } else {
                     // Get all submissions
                     const submissions = [];
@@ -241,6 +263,21 @@ module.exports = async function (context, req) {
                     }
                     
                     context.res.body = { success: true, message: 'Assignments saved' };
+                } else if (req.body.type === 'club-settings') {
+                    // Update club settings
+                    const { clubId, enabled } = req.body;
+                    
+                    const entity = {
+                        partitionKey: 'settings',
+                        rowKey: clubId,
+                        clubId: clubId,
+                        enabled: enabled
+                    };
+                    
+                    // Upsert the entity (create or update)
+                    await clubSettingsTableClient.upsertEntity(entity);
+                    
+                    context.res.body = { success: true, message: 'Club settings updated' };
                 } else {
                     // Submit new registration
                     const submission = req.body;

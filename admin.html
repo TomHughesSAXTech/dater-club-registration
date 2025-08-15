@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -28,7 +28,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
             color: white;
             padding: 40px 30px;
             text-align: center;
@@ -62,7 +62,7 @@
         .status-value {
             font-size: 1.8rem;
             font-weight: bold;
-            color: #5e72e4;
+            color: #ff8f00;
         }
 
         .content {
@@ -88,13 +88,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            background: linear-gradient(135deg, #ff8f00 0%, #ff6f00 100%);
             color: white;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(94, 114, 228, 0.3);
+            box-shadow: 0 5px 15px rgba(255, 143, 0, 0.3);
         }
 
         .btn-secondary {
@@ -146,8 +146,8 @@
         }
 
         .tab.active {
-            color: #5e72e4;
-            border-bottom-color: #5e72e4;
+            color: #ff8f00;
+            border-bottom-color: #ff8f00;
         }
 
         .tab:hover:not(.active) {
@@ -214,7 +214,7 @@
 
         .rank-number {
             font-weight: bold;
-            color: #5e72e4;
+            color: #ff8f00;
             margin-right: 10px;
         }
 
@@ -232,7 +232,7 @@
         }
 
         .club-card-header {
-            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
             color: white;
             padding: 15px;
         }
@@ -276,7 +276,7 @@
             font-size: 0.8rem;
             padding: 2px 6px;
             border-radius: 12px;
-            background: #5e72e4;
+            background: #ff8f00;
             color: white;
         }
 
@@ -323,7 +323,7 @@
         .stat-value {
             font-size: 2rem;
             font-weight: bold;
-            color: #5e72e4;
+            color: #ff8f00;
         }
 
         .no-data {
@@ -378,6 +378,95 @@
         .processing {
             animation: pulse 2s infinite;
         }
+        
+        .club-management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .club-management-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .club-management-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .club-management-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .club-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .club-toggle.enabled {
+            background: #4caf50;
+        }
+        
+        .club-toggle::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .club-toggle.enabled::after {
+            transform: translateX(30px);
+        }
+        
+        .club-management-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .club-management-details {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .club-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .club-status.enabled {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .club-status.disabled {
+            background: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -421,7 +510,6 @@
 
             <div class="controls">
                 <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Data</button>
-                <button class="btn btn-success" onclick="runAssignment()" id="assignBtn" style="display:none">🎲 Run Final Assignment</button>
                 <button class="btn btn-secondary" onclick="exportData()">📥 Export to CSV</button>
                 <button class="btn btn-danger" onclick="clearAssignments()">🗑️ Clear Assignments</button>
                 <button class="btn btn-danger" onclick="clearAllSubmissions()" style="margin-left: 10px;">🧹 Clear All Submissions</button>
@@ -440,6 +528,7 @@
                 <button class="tab active" onclick="switchTab('submissions')">📝 Submissions</button>
                 <button class="tab" onclick="switchTab('assignments')">🎯 Club Assignments</button>
                 <button class="tab" onclick="switchTab('statistics')">📈 Statistics</button>
+                <button class="tab" onclick="switchTab('clubs')">⚙️ Club Management</button>
             </div>
 
             <div class="tab-content active" id="submissions-tab">
@@ -483,6 +572,17 @@
                     </div>
                 </div>
             </div>
+
+            <div class="tab-content" id="clubs-tab">
+                <h2>Club Management</h2>
+                <div class="instructions" style="background: #fff3cd; border-left: 4px solid #ff8f00;">
+                    <h3 style="color: #e65100;">📋 Club Visibility Settings</h3>
+                    <p style="color: #856404; margin: 10px 0;">Use the toggles below to show/hide clubs from the registration page. Disabled clubs will not appear for new registrations but existing assignments remain unchanged.</p>
+                </div>
+                <div class="club-management-grid" id="clubManagementGrid">
+                    <!-- Club management cards will be dynamically inserted here -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -512,15 +612,12 @@
         let submissions = [];
         let assignments = {};
         let currentFilter = 'all';
+        let clubSettings = {};
 
         function updateCountdown() {
             const deadline = new Date('2025-09-21T23:59:59');
             const now = new Date();
             const countdown = document.getElementById('countdown');
-            const assignBtn = document.getElementById('assignBtn');
-            
-            // Always show assignment button for live assignments
-            assignBtn.style.display = 'inline-block';
             
             if (now > deadline) {
                 countdown.textContent = '🔒 Registration CLOSED - Live assignments active';
@@ -542,7 +639,7 @@
                     countdown.classList.add('processing');
                 } else {
                     countdown.textContent = `⏰ Registration closes in: ${days} days, ${hours} hours, ${minutes} minutes - Live assignments active`;
-                    countdown.style.background = '#5e72e4';
+                    countdown.style.background = '#1a237e';
                     countdown.classList.remove('processing');
                 }
                 
@@ -578,10 +675,18 @@
                     });
                 }
                 
+                // Fetch club settings
+                const settingsResponse = await fetch(`${API_URL}?type=club-settings`);
+                if (settingsResponse.ok) {
+                    const settingsData = await settingsResponse.json();
+                    clubSettings = settingsData.clubSettings || {};
+                }
+                
                 updateStats();
                 displaySubmissions();
                 displayAssignments();
                 updateStatistics();
+                displayClubManagement();
                 
                 // Update last refresh time
                 const now = new Date();
@@ -656,109 +761,6 @@
             return allClubs.find(c => c.id === clubId);
         }
 
-        async function runAssignment() {
-            if (!confirm('Run final club assignments? This will assign all students to clubs based on their preferences.')) {
-                return;
-            }
-            
-            try {
-                // Show loading state
-                const assignBtn = document.getElementById('assignBtn');
-                assignBtn.textContent = 'Processing...';
-                assignBtn.disabled = true;
-                
-                // Initialize assignment structure
-                assignments = {};
-                const allClubs = [...clubs['4'], ...clubs['5']];
-                
-                // Initialize each club with empty arrays
-                allClubs.forEach(club => {
-                    if (!assignments[club.id]) {
-                        assignments[club.id] = {
-                            name: club.name,
-                            capacity: club.capacity,
-                            students: []
-                        };
-                    }
-                });
-                
-                // Shuffle submissions for randomization
-                const shuffledSubmissions = [...submissions].sort(() => Math.random() - 0.5);
-                
-                // First pass: Try to give everyone their first choice
-                const unassigned = [];
-                
-                shuffledSubmissions.forEach(submission => {
-                    let assigned = false;
-                    
-                    for (let ranking of submission.rankings) {
-                        const clubId = ranking.clubId;
-                        const club = assignments[clubId];
-                        
-                        if (club && club.students.length < club.capacity) {
-                            club.students.push({
-                                name: submission.studentName,
-                                grade: submission.grade,
-                                preference: ranking.rank,
-                                email: submission.email,
-                                parent: submission.parentName
-                            });
-                            assigned = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!assigned) {
-                        unassigned.push(submission);
-                    }
-                });
-                
-                // Second pass: Try to place unassigned students
-                unassigned.forEach(submission => {
-                    // Find any club with space
-                    const gradeClubs = clubs[submission.grade];
-                    for (let club of gradeClubs) {
-                        if (assignments[club.id].students.length < club.capacity) {
-                            assignments[club.id].students.push({
-                                name: submission.studentName,
-                                grade: submission.grade,
-                                preference: 99, // Not their preference
-                                email: submission.email,
-                                parent: submission.parentName
-                            });
-                            break;
-                        }
-                    }
-                });
-                
-                // Save assignments to Azure
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        type: 'assignment',
-                        assignments: assignments
-                    })
-                });
-                
-                if (!response.ok) throw new Error('Failed to save assignments');
-                
-                // Refresh display
-                displayAssignments();
-                updateStatistics();
-                
-                alert('Club assignments completed successfully!');
-            } catch (error) {
-                console.error('Assignment error:', error);
-                alert('Error running assignments. Please try again.');
-            } finally {
-                const assignBtn = document.getElementById('assignBtn');
-                assignBtn.textContent = '🎲 Run Final Assignment';
-                assignBtn.disabled = false;
-            }
-        }
 
         function displayAssignments() {
             const container = document.getElementById('clubResults');
@@ -766,8 +768,8 @@
             if (Object.keys(assignments).length === 0) {
                 container.innerHTML = `
                     <div class="no-data">
-                        <div class="no-data-icon">⏳</div>
-                        <div class="no-data-text">Assignments will be available after the deadline</div>
+                        <div class="no-data-icon">📋</div>
+                        <div class="no-data-text">No submissions yet - assignments will appear automatically</div>
                     </div>
                 `;
                 return;
@@ -846,6 +848,67 @@
                 : '-';
         }
 
+        function displayClubManagement() {
+            const container = document.getElementById('clubManagementGrid');
+            const allClubs = [...clubs['4'], ...clubs['5']];
+            
+            // Remove duplicates (like shared art clubs)
+            const uniqueClubs = allClubs.filter((club, index, self) => 
+                index === self.findIndex(c => c.id === club.id)
+            );
+            
+            container.innerHTML = uniqueClubs.map(club => {
+                const isEnabled = clubSettings[club.id]?.enabled !== false; // Default to enabled
+                
+                return `
+                    <div class="club-management-card">
+                        <div class="club-management-header">
+                            <div class="club-management-name">${club.name}</div>
+                            <div class="club-toggle ${isEnabled ? 'enabled' : ''}" onclick="toggleClub('${club.id}')"></div>
+                        </div>
+                        <div class="club-management-details">
+                            Capacity: ${club.capacity} students
+                        </div>
+                        <div class="club-status ${isEnabled ? 'enabled' : 'disabled'}">
+                            ${isEnabled ? '✅ Visible to students' : '❌ Hidden from students'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        async function toggleClub(clubId) {
+            const currentEnabled = clubSettings[clubId]?.enabled !== false;
+            const newEnabled = !currentEnabled;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'club-settings',
+                        clubId: clubId,
+                        enabled: newEnabled
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to update club settings');
+                
+                // Update local settings
+                clubSettings[clubId] = { enabled: newEnabled };
+                displayClubManagement();
+                
+                const club = [...clubs['4'], ...clubs['5']].find(c => c.id === clubId);
+                alert(`${club?.name || clubId} is now ${newEnabled ? 'visible' : 'hidden'} on the registration page.`);
+                
+            } catch (error) {
+                console.error('Error updating club settings:', error);
+                alert('Error updating club settings. Please try again.');
+            }
+        }
+
         function switchTab(tabName) {
             // Update tab buttons
             document.querySelectorAll('.tab').forEach(tab => {
@@ -858,6 +921,11 @@
                 content.classList.remove('active');
             });
             document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Load club management when switching to that tab
+            if (tabName === 'clubs') {
+                displayClubManagement();
+            }
         }
 
         function filterData() {
