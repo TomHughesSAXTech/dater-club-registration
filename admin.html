@@ -661,6 +661,7 @@
             <div class="controls">
                 <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Data</button>
                 <button class="btn btn-secondary" onclick="exportData()">📥 Export to CSV</button>
+                <button class="btn btn-danger" onclick="clearAllData()" style="margin-left: 20px;">🧹 Clear All Data</button>
                 
                 <div class="filter-group">
                     <label>Filter by Grade:</label>
@@ -1322,6 +1323,59 @@
             } catch (error) {
                 console.error('Error clearing all submissions:', error);
                 alert('Error clearing submissions. Please try again.');
+            }
+        }
+
+        async function clearAllData() {
+            if (!confirm('⚠️ DANGER: Clear ALL club registration data? This will permanently delete:\n\n• All student submissions\n• All club assignments\n• All waitlists\n\nThis CANNOT be undone!')) {
+                return;
+            }
+            
+            if (!confirm('Are you absolutely certain? This will wipe the entire system clean!')) {
+                return;
+            }
+            
+            if (!confirm('Final confirmation - Type YES in the next dialog to proceed')) {
+                return;
+            }
+            
+            const confirmation = prompt('Type "DELETE ALL DATA" to confirm (case sensitive):');
+            if (confirmation !== 'DELETE ALL DATA') {
+                alert('Confirmation text did not match. Operation cancelled.');
+                return;
+            }
+            
+            try {
+                // Clear all submissions (this will also clear assignments via live assignment)
+                const submissionsResponse = await fetch(`${API_URL}?type=submissions`, {
+                    method: 'DELETE'
+                });
+                
+                if (!submissionsResponse.ok) throw new Error('Failed to clear submissions');
+                
+                // Clear assignments explicitly
+                const assignmentsResponse = await fetch(`${API_URL}?type=assignments`, {
+                    method: 'DELETE'
+                });
+                
+                if (!assignmentsResponse.ok) throw new Error('Failed to clear assignments');
+                
+                // Clear local data and refresh display
+                submissions = [];
+                assignments = {};
+                
+                updateStats();
+                displaySubmissions();
+                displayAssignments();
+                displayUnassignedStudents();
+                updateStatistics();
+                displayClubManagement();
+                
+                alert('✅ All data has been cleared successfully. The system is now empty.');
+                
+            } catch (error) {
+                console.error('Error clearing all data:', error);
+                alert('❌ Error clearing data. Some data may remain. Please try again or check the console.');
             }
         }
 
