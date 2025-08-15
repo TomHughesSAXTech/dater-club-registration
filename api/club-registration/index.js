@@ -4,7 +4,7 @@
 const { TableClient } = require("@azure/data-tables");
 
 // Connection string from Azure Portal - Table Storage Account
-const connectionString = process.env["AzureWebJobsStorage"] || process.env["AZURE_STORAGE_CONNECTION_STRING"];
+const connectionString = process.env["AZURE_STORAGE_CONNECTION_STRING"];
 const submissionsTable = "ClubSubmissions";
 const assignmentsTable = "ClubAssignments";
 
