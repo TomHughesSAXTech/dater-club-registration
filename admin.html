@@ -13,7 +13,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            background: #0e1130;
             min-height: 100vh;
             padding: 20px;
         }
@@ -28,7 +28,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            background: #0e1130;
             color: white;
             padding: 40px 30px;
             text-align: center;
@@ -62,7 +62,7 @@
         .status-value {
             font-size: 1.8rem;
             font-weight: bold;
-            color: #ff8f00;
+            color: #f2c514;
         }
 
         .content {
@@ -88,13 +88,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #ff8f00 0%, #ff6f00 100%);
+            background: #f2c514;
             color: white;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 143, 0, 0.3);
+            box-shadow: 0 5px 15px rgba(242, 197, 20, 0.3);
         }
 
         .btn-secondary {
@@ -146,8 +146,8 @@
         }
 
         .tab.active {
-            color: #ff8f00;
-            border-bottom-color: #ff8f00;
+            color: #f2c514;
+            border-bottom-color: #f2c514;
         }
 
         .tab:hover:not(.active) {
@@ -214,7 +214,7 @@
 
         .rank-number {
             font-weight: bold;
-            color: #ff8f00;
+            color: #f2c514;
             margin-right: 10px;
         }
 
@@ -232,7 +232,7 @@
         }
 
         .club-card-header {
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            background: #0e1130;
             color: white;
             padding: 15px;
         }
@@ -276,7 +276,7 @@
             font-size: 0.8rem;
             padding: 2px 6px;
             border-radius: 12px;
-            background: #ff8f00;
+            background: #f2c514;
             color: white;
         }
 
@@ -323,7 +323,7 @@
         .stat-value {
             font-size: 2rem;
             font-weight: bold;
-            color: #ff8f00;
+            color: #f2c514;
         }
 
         .no-data {
@@ -575,8 +575,8 @@
 
             <div class="tab-content" id="clubs-tab">
                 <h2>Club Management</h2>
-                <div class="instructions" style="background: #fff3cd; border-left: 4px solid #ff8f00;">
-                    <h3 style="color: #e65100;">📋 Club Visibility Settings</h3>
+                <div class="instructions" style="background: rgba(242, 197, 20, 0.1); border-left: 4px solid #f2c514;">
+                    <h3 style="color: #f2c514;">📋 Club Visibility Settings</h3>
                     <p style="color: #856404; margin: 10px 0;">Use the toggles below to show/hide clubs from the registration page. Disabled clubs will not appear for new registrations but existing assignments remain unchanged.</p>
                 </div>
                 <div class="club-management-grid" id="clubManagementGrid">
@@ -639,7 +639,7 @@
                     countdown.classList.add('processing');
                 } else {
                     countdown.textContent = `⏰ Registration closes in: ${days} days, ${hours} hours, ${minutes} minutes - Live assignments active`;
-                    countdown.style.background = '#1a237e';
+                    countdown.style.background = '#0e1130';
                     countdown.classList.remove('processing');
                 }
                 
