@@ -468,6 +468,73 @@
             color: #721c24;
         }
 
+        .unassigned-students {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .unassigned-card {
+            background: #fff5f5;
+            border: 2px solid #feb2b2;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .unassigned-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2);
+        }
+
+        .unassigned-student-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+
+        .unassigned-info {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .waitlist-clubs {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .waitlist-clubs h4 {
+            color: #dc3545;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .waitlist-club-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .waitlist-club-item:last-child {
+            border-bottom: none;
+        }
+
+        .waitlist-preference {
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
         .login-screen {
             display: flex;
             justify-content: center;
@@ -610,6 +677,7 @@
             <div class="tabs">
                 <button class="tab active" onclick="switchTab('submissions')">📝 Submissions</button>
                 <button class="tab" onclick="switchTab('assignments')">🎯 Club Assignments</button>
+                <button class="tab" onclick="switchTab('unassigned')">⚠️ Zero Assignments</button>
                 <button class="tab" onclick="switchTab('statistics')">📈 Statistics</button>
                 <button class="tab" onclick="switchTab('clubs')">⚙️ Club Management</button>
             </div>
@@ -630,6 +698,20 @@
                     <div class="no-data">
                         <div class="no-data-icon">⏳</div>
                         <div class="no-data-text">Assignments will be available after the deadline</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="unassigned-tab">
+                <h2>Students with Zero Club Assignments</h2>
+                <div class="instructions" style="background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b;">
+                    <h3 style="color: #dc3545;">⚠️ Students Needing Manual Intervention</h3>
+                    <p style="color: #721c24; margin: 10px 0;">These students submitted preferences but all their ranked clubs were full. They are on waitlists only and need administrator follow-up for club placement.</p>
+                </div>
+                <div class="unassigned-students" id="unassignedStudents">
+                    <div class="no-data">
+                        <div class="no-data-icon">✅</div>
+                        <div class="no-data-text">All students have club assignments!</div>
                     </div>
                 </div>
             </div>
@@ -816,6 +898,7 @@
                 updateStats();
                 displaySubmissions();
                 displayAssignments();
+                displayUnassignedStudents();
                 updateStatistics();
                 displayClubManagement();
                 
@@ -892,6 +975,74 @@
             return allClubs.find(c => c.id === clubId);
         }
 
+
+        function displayUnassignedStudents() {
+            const container = document.getElementById('unassignedStudents');
+            
+            // Find students with zero assignments
+            const unassignedStudents = [];
+            
+            submissions.forEach(submission => {
+                let hasAssignment = false;
+                
+                // Check if student appears in any club assignments
+                Object.values(assignments).forEach(club => {
+                    if (club.students && club.students.some(student => student.name === submission.studentName)) {
+                        hasAssignment = true;
+                    }
+                });
+                
+                if (!hasAssignment && submission.rankings && submission.rankings.length > 0) {
+                    // Student has no assignments but did submit preferences
+                    unassignedStudents.push(submission);
+                }
+            });
+            
+            if (unassignedStudents.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">✅</div>
+                        <div class="no-data-text">All students have club assignments!</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Filter by current filter if set
+            let filteredUnassigned = unassignedStudents;
+            if (currentFilter !== 'all') {
+                filteredUnassigned = unassignedStudents.filter(s => s.grade === currentFilter);
+            }
+            
+            container.innerHTML = filteredUnassigned.map(student => {
+                const rankedClubs = student.rankings
+                    .sort((a, b) => a.rank - b.rank)
+                    .map(ranking => {
+                        const club = findClubById(ranking.clubId, student.grade);
+                        return `
+                            <div class="waitlist-club-item">
+                                <span>${club ? club.name : ranking.clubId}</span>
+                                <span class="waitlist-preference">#${ranking.rank}</span>
+                            </div>
+                        `;
+                    }).join('');
+                
+                return `
+                    <div class="unassigned-card">
+                        <div class="unassigned-student-name">${student.studentName}</div>
+                        <div class="unassigned-info">
+                            Grade ${student.grade} | Parent: ${student.parentName}<br>
+                            📧 ${student.email} | 📱 ${student.phone}<br>
+                            🕐 Submitted: ${new Date(student.timestamp).toLocaleString()}
+                        </div>
+                        <div class="waitlist-clubs">
+                            <h4>On Waitlists For:</h4>
+                            ${rankedClubs}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
 
         function displayAssignments() {
             const container = document.getElementById('clubResults');
@@ -1053,9 +1204,11 @@
             });
             document.getElementById(`${tabName}-tab`).classList.add('active');
             
-            // Load club management when switching to that tab
+            // Load data when switching to specific tabs
             if (tabName === 'clubs') {
                 displayClubManagement();
+            } else if (tabName === 'unassigned') {
+                displayUnassignedStudents();
             }
         }
 
@@ -1063,6 +1216,7 @@
             currentFilter = document.getElementById('gradeFilter').value;
             displaySubmissions();
             displayAssignments();
+            displayUnassignedStudents();
         }
 
         function exportData() {

@@ -121,37 +121,8 @@ async function runLiveAssignment(tableClient, assignmentsTableClient, context) {
             }
         });
         
-        // Second pass: For students with no assignments, try to place them in any available club
-        shuffledSubmissions.forEach(submission => {
-            const currentAssignments = studentAssignments.get(submission.studentName);
-            
-            // If student has no assignments, try to assign them to any available club for their grade
-            if (currentAssignments.length === 0) {
-                const gradeClubs = clubs[submission.grade] || [];
-                
-                // Randomize the order we try clubs
-                const shuffledGradeClubs = [...gradeClubs];
-                for (let i = shuffledGradeClubs.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [shuffledGradeClubs[i], shuffledGradeClubs[j]] = [shuffledGradeClubs[j], shuffledGradeClubs[i]];
-                }
-                
-                for (let club of shuffledGradeClubs) {
-                    if (assignments[club.id].students.length < club.capacity) {
-                        assignments[club.id].students.push({
-                            name: submission.studentName,
-                            grade: submission.grade,
-                            preference: 99, // Not their preference
-                            email: submission.email,
-                            parent: submission.parentName,
-                            timestamp: submission.timestamp
-                        });
-                        studentAssignments.get(submission.studentName).push(club.id);
-                        break;
-                    }
-                }
-            }
-        });
+        // Students are only assigned to clubs they specifically ranked
+        // If all their ranked clubs are full, they go on waitlists only
         
         // Clear existing assignments
         const existingAssignments = assignmentsTableClient.listEntities();
