@@ -188,7 +188,6 @@ ${clubList}
 
 Your child has been successfully enrolled in the clubs listed above. Please note:
 • Club schedules and specific meeting times will be communicated by club advisors
-• Some clubs may have additional requirements or fees
 • If you have any questions, please contact daterpto@ramsey.k12.nj.us
 
 We look forward to seeing ${studentName} participate in these exciting activities!
@@ -238,7 +237,6 @@ Dater School PTO`,
                 <strong>Important Information:</strong>
                 <ul style="margin: 10px 0 0 0; padding-left: 20px;">
                     <li>Club schedules and specific meeting times will be communicated by club advisors</li>
-                    <li>Some clubs may have additional requirements or fees</li>
                     <li>If you have any questions, please contact <a href="mailto:daterpto@ramsey.k12.nj.us">daterpto@ramsey.k12.nj.us</a></li>
                 </ul>
             </div>
