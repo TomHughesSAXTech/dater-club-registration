@@ -661,6 +661,7 @@
             <div class="controls">
                 <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Data</button>
                 <button class="btn btn-secondary" onclick="exportData()">📥 Export to CSV</button>
+                <button class="btn btn-success" onclick="sendAllResultEmails()">📧 Email All Final Results</button>
                 
                 <div class="filter-group">
                     <label>Filter by Grade:</label>
@@ -951,7 +952,10 @@
                 return `
                     <div class="submission-card">
                         <div class="student-name">${submission.studentName}
-                            <button class="btn btn-danger" style="float: right; padding: 5px 10px; font-size: 0.8rem;" onclick="deleteSubmission('${submission.studentName}', '${submission.grade}')">❌ Delete</button>
+                            <div style="float: right;">
+                                <button class="btn btn-success" style="padding: 5px 10px; font-size: 0.8rem; margin-right: 5px;" onclick="sendIndividualResultEmail('${submission.studentName}', '${submission.grade}')">📧 Email Result</button>
+                                <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;" onclick="deleteSubmission('${submission.studentName}', '${submission.grade}')">❌ Delete</button>
+                            </div>
                         </div>
                         <div class="student-info">
                             Grade ${submission.grade} | Parent: ${submission.parentName}<br>
@@ -1322,6 +1326,90 @@
             } catch (error) {
                 console.error('Error clearing all submissions:', error);
                 alert('Error clearing submissions. Please try again.');
+            }
+        }
+        
+        async function sendAllResultEmails() {
+            if (submissions.length === 0) {
+                alert('No submissions to email.');
+                return;
+            }
+            
+            if (Object.keys(assignments).length === 0) {
+                alert('No assignments have been made yet. Assignments are created automatically after submissions.');
+                return;
+            }
+            
+            if (!confirm(`Send final club assignment emails to all ${submissions.length} registered families?`)) {
+                return;
+            }
+            
+            // Show loading state
+            const button = event.target;
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = '📧 Sending emails...';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'send-final-results'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    if (result.success) {
+                        alert(`✅ Successfully sent emails to all ${result.sent} families!`);
+                    } else {
+                        alert(`Emails sent to ${result.sent} families. ${result.failed} failed.\n\nCheck console for details.`);
+                        console.log('Email send details:', result.details);
+                    }
+                } else {
+                    throw new Error(result.error || 'Failed to send emails');
+                }
+            } catch (error) {
+                console.error('Error sending emails:', error);
+                alert('Error sending emails. Please check your email service configuration.');
+            } finally {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+        
+        async function sendIndividualResultEmail(studentName, grade) {
+            if (!confirm(`Send club assignment email to the parents of ${studentName}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'send-individual-result',
+                        studentName: studentName,
+                        grade: grade
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert(`✅ Email sent successfully to parents of ${studentName}!`);
+                } else {
+                    throw new Error(result.message || 'Failed to send email');
+                }
+            } catch (error) {
+                console.error('Error sending individual email:', error);
+                alert(`Error sending email: ${error.message}`);
             }
         }
 

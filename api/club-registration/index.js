@@ -2,6 +2,7 @@
 // Deploy this as an HTTP-triggered Azure Function
 
 const { TableClient } = require("@azure/data-tables");
+const emailService = require('../emailService');
 
 // Connection string from Azure Portal - Table Storage Account
 const connectionString = process.env["AZURE_STORAGE_CONNECTION_STRING"];
@@ -267,7 +268,85 @@ module.exports = async function (context, req) {
                 break;
 
             case 'POST':
-                if (req.body.type === 'assignment') {
+                if (req.body.type === 'send-final-results') {
+                    // Send final results emails to all parents
+                    const submissions = [];
+                    const entities = tableClient.listEntities();
+                    for await (const entity of entities) {
+                        submissions.push({
+                            studentName: entity.studentName,
+                            grade: entity.grade,
+                            parentName: entity.parentName,
+                            email: entity.email,
+                            phone: entity.phone,
+                            rankings: JSON.parse(entity.rankings),
+                            timestamp: entity.timestamp
+                        });
+                    }
+                    
+                    // Get current assignments
+                    const assignments = {};
+                    const assignmentEntities = assignmentsTableClient.listEntities();
+                    for await (const entity of assignmentEntities) {
+                        assignments[entity.clubId] = {
+                            name: entity.clubName,
+                            capacity: entity.capacity,
+                            students: JSON.parse(entity.students || '[]')
+                        };
+                    }
+                    
+                    // Send emails to all parents
+                    const emailResults = await emailService.sendAllFinalResults(submissions, assignments);
+                    
+                    context.res.body = {
+                        success: emailResults.success,
+                        message: `Sent ${emailResults.sent} emails. Failed: ${emailResults.failed}`,
+                        details: emailResults.details
+                    };
+                } else if (req.body.type === 'send-individual-result') {
+                    // Send result email to individual student
+                    const { studentName, grade } = req.body;
+                    
+                    // Find the student's submission
+                    const rowKey = studentName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const partitionKey = `grade${grade}`;
+                    
+                    try {
+                        const entity = await tableClient.getEntity(partitionKey, rowKey);
+                        const submission = {
+                            studentName: entity.studentName,
+                            grade: entity.grade,
+                            parentName: entity.parentName,
+                            email: entity.email,
+                            phone: entity.phone,
+                            rankings: JSON.parse(entity.rankings),
+                            timestamp: entity.timestamp
+                        };
+                        
+                        // Get current assignments
+                        const assignments = {};
+                        const assignmentEntities = assignmentsTableClient.listEntities();
+                        for await (const entity of assignmentEntities) {
+                            assignments[entity.clubId] = {
+                                name: entity.clubName,
+                                capacity: entity.capacity,
+                                students: JSON.parse(entity.students || '[]')
+                            };
+                        }
+                        
+                        // Send email to this student's parent
+                        const emailResult = await emailService.sendFinalResults(submission, assignments);
+                        
+                        context.res.body = emailResult;
+                    } catch (error) {
+                        if (error.statusCode === 404) {
+                            context.res.status = 404;
+                            context.res.body = { error: 'Student not found' };
+                        } else {
+                            throw error;
+                        }
+                    }
+                } else if (req.body.type === 'assignment') {
                     // Save assignments
                     const { assignments } = req.body;
                     
@@ -345,6 +424,15 @@ module.exports = async function (context, req) {
                     };
                     
                     await tableClient.createEntity(entity);
+                    
+                    // Send confirmation email
+                    try {
+                        await emailService.sendSubmissionConfirmation(submission);
+                        context.log(`Confirmation email sent to ${submission.email}`);
+                    } catch (emailError) {
+                        context.log.error('Failed to send confirmation email:', emailError);
+                        // Don't fail the submission if email fails
+                    }
                     
                     // Run live assignment after each submission
                     await runLiveAssignment(tableClient, assignmentsTableClient, context);
